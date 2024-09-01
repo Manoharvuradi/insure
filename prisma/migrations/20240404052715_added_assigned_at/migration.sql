@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Contacts" ADD COLUMN     "assignedAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP;

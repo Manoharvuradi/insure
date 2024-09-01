@@ -1,0 +1,1385 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum identificationType {
+  ID
+  PASSPORT
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PolicyStatus {
+  ACTIVE
+  CANCELLED
+  LAPSED
+}
+
+enum LeadStatus {
+  DRAFT
+  INREVIEW
+  DECLINED
+  ACCEPTED
+  REFUSED
+}
+
+enum Leadtype {
+  APPLICATION
+  CLAIM
+}
+
+enum ClaimStatus {
+  OPEN
+  CLOSED
+  FINALIZED
+  ACKNOWLEDGED
+  REJECTED
+}
+
+enum ClaimApprovalStatus {
+  PENDING
+  APPROVED
+  REPUDIATED
+  PAYOUT_BLOCKED
+  PAYOUT_PROCESSED
+}
+
+enum CoverageOptions {
+  A
+  B
+  C
+  D
+  E
+  TELKOM_FREE_BENEFIT
+}
+
+enum ExtendedFamilyMembers {
+  FATHER
+  MOTHER
+  SISTER
+  BROTHER
+}
+
+enum PremiumFrequency {
+  MONTHLY
+  YEARLY
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum Type {
+  INDIVIDUAL
+}
+
+enum PackageName {
+  DEVICE_INSURANCE
+  DEVICE_CREDITLIFE
+  EMPLOYEE_MOTOR_INSURANCE
+  EMPLOYEE_FUNERAL_INSURANCE
+  EMPLOYEE_DEVICE_INSURANCE
+  EMPLOYEE_MOTOR_CREDITLIFE
+  EMPLOYEE_DEVICE_CREDITLIFE
+}
+
+enum SchemeType {
+  INDIVIDUAL
+  GROUP
+}
+
+enum ComplaintStatus {
+  OPEN
+  CLOSED
+}
+
+enum DeceasedIndividual {
+  MAIN
+  OTHER
+}
+
+enum FuneralClaimType {
+  ACCIDENT
+  NATURAL
+}
+
+enum PaymentStatus {
+  SUBMITTED
+  PENDING
+  PROCESSING
+  SUCCESSFUL
+  FAILED
+  CANCLLED
+}
+
+enum PaymentType {
+  policyPremium
+  claimPayOut
+  policyPremiuRefund
+}
+
+enum FamilyRelationship {
+  CHILD
+  EXTENDEDFAMILY
+}
+
+enum UserRole {
+  AGENT
+  POLICY_ADMINISTRATOR
+  CLAIM_ASSESSOR
+  CLAIM_SUPERVISOR
+  DEVELOPER
+  SUPER_ADMIN
+}
+
+enum eventCategory {
+  POLICY
+  CLAIM
+  APPLICATION
+  COMPLAINT
+  POLICYHOLDER
+  LEAD
+}
+
+enum eventName {
+  POLICY_ISSUED
+  POLICY_BENEFICIARY_UPDATED
+  POLICY_POLICYHOLDER_UPDATED
+  POLICY_UPDATED
+  POLICY_CANCELLED
+  CLAIM_APPROVED
+  CLAIM_RECEIVED
+  CLAIM_REPUDIATED
+  CLAIM_SENT_TO_REVIEW_CLAIMENT
+  LEAD_UNATTENDED
+  LEAD_ACCEPTED
+  LEAD_REFUSED
+  APPLICATION_UNATTENDED
+}
+
+enum Features {
+  Admin
+  Application
+  Leads
+  Policy
+  Claim
+  Complaints
+  Payments
+  Contacts
+}
+
+enum ReportType {
+  TELKOM
+  QSURE
+}
+
+enum PaymentMethodTypes {
+  DEBIT_FROM_SALARY
+  DEBIT_FROM_BANK_ACCOUNT
+}
+
+enum PaymentState {
+  POSTED
+  NOT_POSTED
+}
+
+enum DeviceClaimType {
+  SOFTWARE_DAMAGE
+  HARDWARE_DAMAGE
+  LOST
+  SCREEN_DAMAGE
+}
+
+enum AgentRoleType {
+  NONE
+  AGENT
+  LEAD
+  MANAGER
+}
+
+enum ActionType {
+  CHILD_AGE_LIMIT_EXCEDED
+}
+
+model CallCenter {
+  id          Int               @id @default(autoincrement())
+  name        String?
+  description String?
+  user        CredentialsUser[]
+  Contacts    Contacts[]
+}
+
+model CredentialsUser {
+  id                                        Int                                @id @default(autoincrement())
+  firstName                                 String?
+  lastName                                  String?
+  email                                     String                             @unique
+  password                                  String?
+  roles                                     UserRole[]
+  phone                                     String?
+  callCenterId                              Int?
+  callCenter                                CallCenter?                        @relation(fields: [callCenterId], references: [id])
+  isArchived                                Boolean?                           @default(false)
+  packageName                               PackageName[]
+  jwtToken                                  JwtToken[]
+  otp_enabled                               Boolean?                           @default(false)
+  otp_verified                              Boolean?                           @default(false)
+  otp_ascii                                 String?
+  otp_hex                                   String?
+  otp_base32                                String?
+  otp_auth_url                              String?
+  createdAt                                 DateTime?                          @default(now())
+  updatedAt                                 DateTime?                          @updatedAt
+  agentRoletype                             AgentRoleType?                     @default(NONE)
+  reportingUsers                            CredentialsUser[]                  @relation("reportingUser")
+  reportsTo                                 CredentialsUser[]                  @relation("reportingUser")
+  applicationsCreatedBy                     Application[]                      @relation("createdBy")
+  applicationsUpdatedBy                     Application[]                      @relation("updatedBy")
+  policyCreatedBy                           Policy[]                           @relation("createdBy")
+  policyUpdatedBy                           Policy[]                           @relation("updatedBy")
+  claimCreatedBy                            Claim[]                            @relation("createdBy")
+  claimUpdatedBy                            Claim[]                            @relation("updatedBy")
+  policyholderCreatedBy                     Policyholder[]                     @relation("createdBy")
+  policyholderUpdatedBy                     Policyholder[]                     @relation("updatedBy")
+  quotationCreatedBy                        Quotation[]                        @relation("createdBy")
+  quotationUpdatedBy                        Quotation[]                        @relation("updatedBy")
+  premiumCalculatorCreatedBy                PremiumCalculator[]                @relation("createdBy")
+  premiumCalculatorUpdatedBy                PremiumCalculator[]                @relation("updatedBy")
+  extendedFamilyPremiumCalculatorCreatedBy  ExtendedPremiumCalculator[]        @relation("createdBy")
+  extendedFamilyPremiumCalculatorUpdatedBy  ExtendedPremiumCalculator[]        @relation("updatedBy")
+  policyNoteCreatedBy                       PolicyNote[]                       @relation("createdBy")
+  policyNoteUpdatedBy                       PolicyNote[]                       @relation("updatedBy")
+  claimNoteCreatedBy                        ClaimNote[]                        @relation("createdBy")
+  claimNoteUpdatedBy                        ClaimNote[]                        @relation("updatedBy")
+  applicationNoteCreatedBy                  ApplicationNote[]                  @relation("createdBy")
+  applicationNoteUpdatedBy                  ApplicationNote[]                  @relation("updatedBy")
+  policyActivityCreatedBy                   PolicyActivity[]                   @relation("createdBy")
+  policyActivityUpdatedBy                   PolicyActivity[]                   @relation("updatedBy")
+  claimActivityCreatedBy                    ClaimActivity[]                    @relation("createdBy")
+  claimActivityUpdatedBy                    ClaimActivity[]                    @relation("updatedBy")
+  applicationActivityCreatedBy              ApplicationActivity[]              @relation("createdBy")
+  applicationActivityUpdatedBy              ApplicationActivity[]              @relation("updatedBy")
+  policyholderActivityCreatedBy             PolicyholderActivity[]             @relation("createdBy")
+  policyholderActivityUpdatedBy             PolicyholderActivity[]             @relation("updatedBy")
+  uploadLibraryCreatedBy                    UploadLibrary[]                    @relation("createdBy")
+  uploadLibraryUpdatedBy                    UploadLibrary[]                    @relation("updatedBy")
+  paymentsCreatedBy                         Payments[]                         @relation("createdBy")
+  paymentsUpdatedBy                         Payments[]                         @relation("updatedBy")
+  policyPaymentsCreatedBy                   policyPayments[]                   @relation("createdBy")
+  policyPaymentsUpdatedBy                   policyPayments[]                   @relation("updatedBy")
+  complaintsCreatedBy                       Complaints[]                       @relation("createdBy")
+  complaintsUpdatedBy                       Complaints[]                       @relation("updatedBy")
+  complaintsActivityCreatedBy               ComplaintsActivity[]               @relation("createdBy")
+  complaintsActivityUpdatedBy               ComplaintsActivity[]               @relation("updatedBy")
+  complaintNoteCreatedBy                    ComplaintNotes[]                   @relation("createdBy")
+  complaintNoteUpdatedBy                    ComplaintNotes[]                   @relation("updatedBy")
+  paymentMethodCreatedBy                    PaymentMethod[]                    @relation("createdBy")
+  paymentMethodUpdatedBy                    PaymentMethod[]                    @relation("updatedBy")
+  funeralClaimBlockCreatedBy                FuneralClaimBlock[]                @relation("createdBy")
+  funeralClaimBlockUpdatedBy                FuneralClaimBlock[]                @relation("updatedBy")
+  eventNotificationCreatedBy                EventNotification[]                @relation("createdBy")
+  eventNotificationUpdatedBy                EventNotification[]                @relation("updatedBy")
+  accessLevelsCreatedBy                     AccessLevels[]                     @relation("createdBy")
+  accessLevelsUpdatedBy                     AccessLevels[]                     @relation("updatedBy")
+  claimCheckListCreatedBy                   ClaimCheckList[]                   @relation("createdBy")
+  claimCheckListUpdatedBy                   ClaimCheckList[]                   @relation("updatedBy")
+  claimcheckListNoteCreatedBy               ClaimcheckListNote[]               @relation("createdBy")
+  claimcheckListNoteUpdatedBy               ClaimcheckListNote[]               @relation("updatedBy")
+  employeeDataCreatedBy                     EmployeeData[]                     @relation("createdBy")
+  employeeDataUpdatedBy                     EmployeeData[]                     @relation("updatedBy")
+  attachmentsCreatedBy                      Attachments[]                      @relation("createdBy")
+  creditLifeClaimBlockCreatedBy             CreditLifeClaimBlock[]             @relation("createdBy")
+  creditLifeclaimBlockUpdatedBy             CreditLifeClaimBlock[]             @relation("updatedBy")
+  VehicleDataCreatedBy                      VehicleData[]                      @relation("createdBy")
+  VehicleDataUpdatedBy                      VehicleData[]                      @relation("updatedBy")
+  devicePremiumCalCreatedBy                 DevicePremiumCalculator[]          @relation("createdBy")
+  devicePremiumCalUpdatedBy                 DevicePremiumCalculator[]          @relation("updatedBy")
+  PackageRulesCreatedBy                     PackageRules[]                     @relation("createdBy")
+  PackageRulesUpdatedBy                     PackageRules[]                     @relation("updatedBy")
+  DeviceCatalogCreatedBy                    DeviceCatalog[]                    @relation("createdBy")
+  DeviceCatalogUpdatedBy                    DeviceCatalog[]                    @relation("updatedBy")
+  deviceClaimBlockCreatedBy                 DeviceClaimBlock[]                 @relation("createdBy")
+  deviceClaimBlockUpdatedBy                 DeviceClaimBlock[]                 @relation("updatedBy")
+  CreditLifeDeviceClaimBlockCreatedBy       CreditLifeDeviceClaimBlock[]       @relation("createdBy")
+  CreditLifeDeviceClaimBlockUpdatedBy       CreditLifeDeviceClaimBlock[]       @relation("updatedBy")
+  LeadsCreatedBy                            Leads[]                            @relation("createdBy")
+  LeadsUpdatedBy                            Leads[]                            @relation("updatedBy")
+  LeadNoteCreatedBy                         LeadNote[]                         @relation("createdBy")
+  LeadNoteUpdatedBy                         LeadNote[]                         @relation("updatedBy")
+  LeadActivityCreatedBy                     LeadActivity[]                     @relation("createdBy")
+  LeadActivityUpdatedBy                     LeadActivity[]                     @relation("updatedBy")
+  retailDeviceClaimBlockCreatedBy           RetailDeviceClaimBlock[]           @relation("createdBy")
+  retailDeviceClaimBlockUpdatedBy           RetailDeviceClaimBlock[]           @relation("updatedBy")
+  retailCreditLifeDeviceClaimBlockCreatedBy RetailCreditLifeDeviceClaimBlock[] @relation("createdBy")
+  retailCreditLifeDeviceClaimBlockUpdatedBy RetailCreditLifeDeviceClaimBlock[] @relation("updatedBy")
+  otpGeneratedBy                            SmsVerfication[]                   @relation("createdBy")
+  contactsCreatedBy                         Contacts[]                         @relation("createdBy")
+  contactsUpdatedBy                         Contacts[]                         @relation("updatedBy")
+}
+
+model JwtToken {
+  id     Int              @id @default(autoincrement())
+  token  String           @unique
+  expiry String?
+  userId Int?
+  user   CredentialsUser? @relation(fields: [userId], references: [id])
+}
+
+model Policyholder {
+  id                     String                 @id @default(uuid())
+  type                   Type?
+  firstName              String?
+  initial                String?
+  lastName               String?
+  dateOfBirth            DateTime?
+  gender                 Gender?
+  email                  String
+  phone                  String
+  phoneOther             String?
+  streetAddress1         String?
+  streetAddress2         String?
+  suburb                 String?
+  city                   String?
+  country                String?
+  areaCode               String?
+  appData                Json?
+  identification         Identification[]
+  paymentMethods         PaymentMethod[]
+  citizenshipId          String
+  salaryReferenceNo      String?
+  isArchived             Boolean?               @default(false)
+  applications           Application[]
+  policies               Policy[]
+  claims                 Claim[]
+  policyholderActivities PolicyholderActivity[]
+  createdAt              DateTime?              @default(now())
+  updatedAt              DateTime?              @updatedAt
+  createdBy              CredentialsUser?       @relation("createdBy", fields: [createdById], references: [id])
+  createdById            Int?
+  updatedBy              CredentialsUser?       @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById            Int?
+  Leads                  Leads[]
+
+  @@unique([email])
+  @@unique([citizenshipId])
+}
+
+model Leads {
+  id                  String           @id @default(uuid())
+  leadNumber          String
+  policyholderId      String
+  policyholder        Policyholder?    @relation(fields: [policyholderId], references: [id], onDelete: Cascade)
+  application         Application?
+  claimId             String?          @unique
+  claims              Claim?           @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  packageName         PackageName?     @default(EMPLOYEE_FUNERAL_INSURANCE)
+  status              LeadStatus       @default(DRAFT)
+  leadType            Leadtype
+  policyId            String?
+  policy              Policy?          @relation(fields: [policyId], references: [id])
+  options             CoverageOptions?
+  billingFrequency    PremiumFrequency @default(MONTHLY)
+  applicationOnHold   Boolean?         @default(false)
+  applicationRejected Boolean?         @default(false)
+  claimOnHold         Boolean?         @default(false)
+  claimRejected       Boolean?         @default(false)
+  applicationData     Json?
+  claimant            Json?
+  policyScheduleKey   String?
+  sumAssured          Float?
+  basePremium         Float?
+  additionalPremium   Float?
+  totalPremium        Float?
+  freeBenefitPremium  Float?
+  billingDay          Int?
+  billingAmount       Float?
+  nextBillingDate     DateTime?
+  nextBillingAmount   Float?
+  balance             Float?
+  startDate           DateTime
+  endDate             DateTime?
+  schemeType          SchemeType?      @default(INDIVIDUAL)
+  renewalDate         DateTime?
+  autoRenewal         Boolean?
+  beneficiaries       IBeneficiary[]
+  appData             Json?
+  fileIds             UploadLibrary[]
+  complaints          Complaints[]
+  paymentMethod       PaymentMethod[]
+  isArchived          Boolean?         @default(false)
+  createdAt           DateTime?        @default(now())
+  updatedAt           DateTime?        @updatedAt
+  createdById         Int?
+  updatedById         Int?
+  createdBy           CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy           CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+  LeadNote            LeadNote[]
+  LeadActivity        LeadActivity[]
+  Contacts            Contacts[]
+
+  @@unique([leadNumber])
+}
+
+model Application {
+  id                    String                @id @default(uuid())
+  policyholderId        String
+  policyholder          Policyholder?         @relation(fields: [policyholderId], references: [id], onDelete: Cascade)
+  policy                Policy?
+  status                ApplicationStatus     @default(PENDING)
+  options               CoverageOptions?
+  billingFrequency      PremiumFrequency      @default(MONTHLY)
+  applicationData       Json
+  packageName           PackageName?          @default(EMPLOYEE_FUNERAL_INSURANCE)
+  sumAssured            Float?
+  basePremium           Float? //mainmuber+spouse+child  // additionalPremium
+  additionalPremium     Float? //Extended famliy  // 0
+  totalPremium          Float? //base+additional  // additionalPremium
+  // extraBenefitPremium   Float? //(base - option C) + additional 
+  freeBenefitPremium    Float? //option C  // freeCoverPremium
+  billingDay            Int
+  nextBillingDate       DateTime?
+  balance               Float?
+  startDate             DateTime
+  endDate               DateTime?
+  schemeType            SchemeType?           @default(INDIVIDUAL)
+  renewalDate           DateTime?
+  autoRenewal           Boolean?
+  beneficiaries         IBeneficiary[]
+  appData               Json?
+  note                  ApplicationNote[]
+  applicationActivities ApplicationActivity[]
+  fileIds               UploadLibrary[]
+  paymentMethod         PaymentMethod[]
+  isArchived            Boolean?              @default(false)
+  createdAt             DateTime?             @default(now())
+  updatedAt             DateTime?             @updatedAt
+  createdBy             CredentialsUser?      @relation("createdBy", fields: [createdById], references: [id])
+  createdById           Int?
+  updatedBy             CredentialsUser?      @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById           Int?
+  leadId                String?               @unique
+  Leads                 Leads?                @relation(fields: [leadId], references: [id], onDelete: Cascade)
+}
+
+model Policy {
+  id                 String           @id @default(uuid())
+  policyNumber       String
+  policyholderId     String
+  policyholder       Policyholder?    @relation(fields: [policyholderId], references: [id], onDelete: Cascade)
+  applicationId      String           @unique
+  application        Application?     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  claims             Claim[]
+  Leads              Leads[]
+  packageName        PackageName?     @default(EMPLOYEE_FUNERAL_INSURANCE)
+  status             PolicyStatus     @default(ACTIVE)
+  options            CoverageOptions?
+  billingFrequency   PremiumFrequency @default(MONTHLY)
+  policyData         Json
+  policyScheduleKey  String?
+  sumAssured         Float?
+  basePremium        Float?
+  additionalPremium  Float? //Extended famliy
+  totalPremium       Float? //base+additional
+  // extraBenefitPremium  Float? //(base - option C) + additional 
+  freeBenefitPremium Float? //option C  
+  billingDay         Int
+  billingAmount      Float?
+  nextBillingDate    DateTime?
+  nextBillingAmount  Float?
+  balance            Float?
+  startDate          DateTime
+  endDate            DateTime?
+  schemeType         SchemeType?      @default(INDIVIDUAL)
+  renewalDate        DateTime?
+  autoRenewal        Boolean?
+  beneficiaries      IBeneficiary[]
+  appData            Json?
+  note               PolicyNote[]
+  policyActivities   PolicyActivity[]
+  fileIds            UploadLibrary[]
+  payments           Payments[] //transactions
+  complaints         Complaints[]
+  paymentMethod      PaymentMethod[]
+  policyPayments     policyPayments[] //history
+  isArchived         Boolean?         @default(false)
+  createdAt          DateTime?        @default(now())
+  updatedAt          DateTime?        @updatedAt
+  createdById        Int?
+  updatedById        Int?
+  createdBy          CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy          CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+
+  @@unique([policyNumber])
+}
+
+model Claim {
+  id                         String                             @id @default(uuid())
+  claimNumber                String
+  policyId                   String
+  policies                   Policy?                            @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  Leads                      Leads?
+  policyholderId             String?
+  policyholder               Policyholder?                      @relation(fields: [policyholderId], references: [id], onDelete: Cascade)
+  claimStatus                ClaimStatus                        @default(OPEN)
+  approvalStatus             ClaimApprovalStatus?               @default(PENDING)
+  packageName                PackageName?                       @default(EMPLOYEE_FUNERAL_INSURANCE)
+  requestedAmount            Float?
+  grantedAmount              Float?
+  claimDate                  DateTime?                          @default(now())
+  claimant                   Json
+  appData                    Json?
+  fileIds                    UploadLibrary[]
+  note                       ClaimNote[]
+  activities                 ClaimActivity[]
+  payments                   Payments[]
+  funeralClaimBlock          FuneralClaimBlock[]
+  creditLifeClaimBlock       CreditLifeClaimBlock[]
+  deviceClaimBlock           DeviceClaimBlock[]
+  creditLifeDeviceClaimBlock CreditLifeDeviceClaimBlock[]
+  retailDeviceClaim          RetailDeviceClaimBlock[]
+  retailCreditLifeDevice     RetailCreditLifeDeviceClaimBlock[]
+  claimCheckList             ClaimCheckList[]
+  isArchived                 Boolean?                           @default(false)
+  createdAt                  DateTime?                          @default(now())
+  updatedAt                  DateTime?                          @updatedAt
+  createdBy                  CredentialsUser?                   @relation("createdBy", fields: [createdById], references: [id])
+  createdById                Int?
+  updatedBy                  CredentialsUser?                   @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById                Int?
+
+  @@unique([claimNumber])
+}
+
+model Complaints {
+  id                      Int                  @id @default(autoincrement())
+  complaintNumber         String
+  status                  ComplaintStatus
+  reason                  String
+  complainantFirstName    String
+  complainantLastName     String
+  complainantEmail        String
+  complainantMobileNumber String
+  complaintActivities     ComplaintsActivity[]
+  complaintNotes          ComplaintNotes[]
+  policyId                String
+  policy                  Policy?              @relation(fields: [policyId], references: [id])
+  fileIds                 UploadLibrary[]
+  packageName             PackageName?         @default(EMPLOYEE_FUNERAL_INSURANCE)
+  isArchived              Boolean?             @default(false)
+  createdAt               DateTime?            @default(now())
+  updatedAt               DateTime?            @updatedAt
+  createdById             Int?
+  updatedById             Int?
+  createdBy               CredentialsUser?     @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy               CredentialsUser?     @relation("updatedBy", fields: [updatedById], references: [id])
+  Leads                   Leads?               @relation(fields: [leadsId], references: [id])
+  leadsId                 String?
+}
+
+model Payments {
+  id                Int              @id @default(autoincrement())
+  paymentType       PaymentType
+  amount            Float?
+  balance           Float?
+  description       String?
+  paymentDate       DateTime?
+  finalizedAt       DateTime?
+  externalReference String?
+  failureReason     String?
+  failureAction     String?
+  failureCode       String?
+  collectionType    String?
+  billingDate       DateTime
+  policyId          String?
+  policy            Policy?          @relation(fields: [policyId], references: [id])
+  claimId           String?
+  claim             Claim?           @relation(fields: [claimId], references: [id])
+  packageName       PackageName?     @default(EMPLOYEE_FUNERAL_INSURANCE)
+  createdAt         DateTime?        @default(now())
+  updatedAt         DateTime?        @updatedAt
+  createdById       Int?
+  updatedById       Int?
+  createdBy         CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy         CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+model policyPayments {
+  id            Int              @id @default(autoincrement())
+  status        PaymentStatus    @default(PENDING)
+  paymentType   PaymentType
+  state         PaymentState?    @default(NOT_POSTED)
+  amount        Float?
+  description   String?
+  paymentDate   DateTime?
+  failureReason String?
+  billingDate   DateTime
+  policyId      String?
+  policy        Policy?          @relation(fields: [policyId], references: [id])
+  packageName   PackageName?     @default(EMPLOYEE_FUNERAL_INSURANCE)
+  createdAt     DateTime?        @default(now())
+  updatedAt     DateTime?        @updatedAt
+  createdById   Int?
+  updatedById   Int?
+  createdBy     CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy     CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+model PaymentMethod {
+  id                Int                 @id @default(autoincrement())
+  isPrimary         Boolean?
+  paymentMethodType PaymentMethodTypes?
+  collectionType    String?
+  accountHolder     String?
+  bank              String?
+  branchCode        String?
+  accountNumber     String?
+  accountType       String?
+  externalReference String?
+  policyholderId    String?
+  billingAddress    String?
+  Policyholder      Policyholder?       @relation(fields: [policyholderId], references: [id])
+  applicationId     String?
+  application       Application?        @relation(fields: [applicationId], references: [id])
+  policyId          String?
+  policy            Policy?             @relation(fields: [policyId], references: [id])
+  createdAt         DateTime?           @default(now())
+  updatedAt         DateTime?           @updatedAt
+  createdBy         CredentialsUser?    @relation("createdBy", fields: [createdById], references: [id])
+  createdById       Int?
+  updatedBy         CredentialsUser?    @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById       Int?
+  Leads             Leads?              @relation(fields: [leadsId], references: [id])
+  leadsId           String?
+}
+
+model PremiumCalculator {
+  id          Int              @id @default(autoincrement())
+  options     CoverageOptions
+  isArchived  Boolean?         @default(false)
+  createdAt   DateTime?        @default(now())
+  updatedAt   DateTime?        @updatedAt
+  createdById Int?
+  updatedById Int?
+  childrenId  Int?
+  mainMember  Json
+  spouse      Json
+  children    IMember[]
+  updatedBy   CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+  createdBy   CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+
+  @@unique([options])
+}
+
+model ExtendedPremiumCalculator {
+  id               Int              @id @default(autoincrement())
+  options          CoverageOptions
+  extendedFamilyId Int?
+  extendedFamily   IMember[]
+  createdById      Int?
+  updatedById      Int?
+  isArchived       Boolean?         @default(false)
+  createdAt        DateTime?        @default(now())
+  updatedAt        DateTime?        @updatedAt
+  createdBy        CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy        CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+
+  @@unique([options])
+}
+
+model UploadLibrary {
+  id             Int              @id @default(autoincrement())
+  fileUrl        String
+  s3response     Json?
+  name           String?
+  type           String?
+  description    String?
+  appData        Json?
+  isArchived     Boolean?         @default(false)
+  createdAt      DateTime?        @default(now())
+  updatedAt      DateTime?        @updatedAt
+  applicationIds String?
+  policyIds      String?
+  complaintIds   Int?
+  claimIds       String?
+  createdById    Int?
+  updatedById    Int?
+  application    Application?     @relation(fields: [applicationIds], references: [id], onDelete: Cascade)
+  policy         Policy?          @relation(fields: [policyIds], references: [id], onDelete: Cascade)
+  complaint      Complaints?      @relation(fields: [complaintIds], references: [id], onDelete: Cascade)
+  claims         Claim?           @relation(fields: [claimIds], references: [id], onDelete: Cascade)
+  createdBy      CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy      CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+  Leads          Leads?           @relation(fields: [leadsId], references: [id])
+  leadsId        String?
+}
+
+model LeadNote {
+  id          Int              @id @default(autoincrement())
+  Leads       Leads?           @relation(fields: [leadsId], references: [id])
+  leadsId     String?
+  title       String
+  description String?
+  isArchived  Boolean?         @default(false)
+  createdAt   DateTime?        @default(now())
+  updatedAt   DateTime?        @updatedAt
+  createdById Int?
+  updatedById Int?
+  createdBy   CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy   CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+model PolicyNote {
+  id          Int              @id @default(autoincrement())
+  policyId    String
+  policy      Policy?          @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  isArchived  Boolean?         @default(false)
+  createdAt   DateTime?        @default(now())
+  updatedAt   DateTime?        @updatedAt
+  createdById Int?
+  updatedById Int?
+  createdBy   CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy   CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+model ClaimNote {
+  id          Int              @id @default(autoincrement())
+  claimId     String
+  claim       Claim?           @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  isArchived  Boolean?         @default(false)
+  createdAt   DateTime?        @default(now())
+  updatedAt   DateTime?        @updatedAt
+  createdById Int?
+  updatedById Int?
+  createdBy   CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy   CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+model ApplicationNote {
+  id            Int              @id @default(autoincrement())
+  applicationId String
+  application   Application?     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  isArchived    Boolean?         @default(false)
+  createdAt     DateTime?        @default(now())
+  updatedAt     DateTime?        @updatedAt
+  createdById   Int?
+  updatedById   Int?
+  createdBy     CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy     CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+model ComplaintNotes {
+  id          Int              @id @default(autoincrement())
+  complaintId Int
+  complaint   Complaints?      @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  isArchived  Boolean?         @default(false)
+  createdAt   DateTime?        @default(now())
+  updatedAt   DateTime?        @updatedAt
+  createdById Int?
+  updatedById Int?
+  createdBy   CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy   CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+model ClaimcheckListNote {
+  id               Int              @id @default(autoincrement())
+  claimCheckListId Int
+  claim            ClaimCheckList?  @relation(fields: [claimCheckListId], references: [id], onDelete: Cascade)
+  title            String
+  description      String?
+  isArchived       Boolean?         @default(false)
+  createdAt        DateTime?        @default(now())
+  updatedAt        DateTime?        @updatedAt
+  createdById      Int?
+  updatedById      Int?
+  createdBy        CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy        CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+model LeadActivity {
+  id          Int              @id @default(autoincrement())
+  name        String
+  description Json?
+  differences Json?
+  isArchived  Boolean?         @default(false)
+  createdAt   DateTime?        @default(now())
+  updatedAt   DateTime?        @updatedAt
+  createdById Int?
+  updatedById Int?
+  createdBy   CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy   CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+  Leads       Leads?           @relation(fields: [leadsId], references: [id])
+  leadsId     String?
+}
+
+model PolicyActivity {
+  id          Int              @id @default(autoincrement())
+  policyId    String
+  policy      Policy?          @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  name        String
+  description Json?
+  differences Json?
+  isArchived  Boolean?         @default(false)
+  createdAt   DateTime?        @default(now())
+  updatedAt   DateTime?        @updatedAt
+  createdById Int?
+  updatedById Int?
+  createdBy   CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy   CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+model ClaimActivity {
+  id          Int              @id @default(autoincrement())
+  claimId     String
+  claim       Claim?           @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  name        String
+  description Json?
+  differences Json?
+  isArchived  Boolean?         @default(false)
+  createdAt   DateTime?        @default(now())
+  updatedAt   DateTime?        @updatedAt
+  createdBy   CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+}
+
+model ApplicationActivity {
+  id            Int              @id @default(autoincrement())
+  applicationId String
+  application   Application?     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  name          String
+  description   Json?
+  differences   Json?
+  isArchived    Boolean?         @default(false)
+  createdAt     DateTime?        @default(now())
+  updatedAt     DateTime?        @updatedAt
+  createdById   Int?
+  updatedById   Int?
+  createdBy     CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy     CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+model ComplaintsActivity {
+  id          Int              @id @default(autoincrement())
+  complaintId Int
+  complaint   Complaints?      @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  name        String
+  description Json?
+  differences Json?
+  isArchived  Boolean?         @default(false)
+  createdAt   DateTime?        @default(now())
+  updatedAt   DateTime?        @updatedAt
+  createdById Int?
+  updatedById Int?
+  createdBy   CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy   CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+model PolicyholderActivity {
+  id             Int              @id @default(autoincrement())
+  policyholderId String
+  policyholder   Policyholder?    @relation(fields: [policyholderId], references: [id], onDelete: Cascade)
+  name           String
+  description    Json?
+  differences    Json?
+  isArchived     Boolean?         @default(false)
+  createdAt      DateTime?        @default(now())
+  updatedAt      DateTime?        @updatedAt
+  createdById    Int?
+  updatedById    Int?
+  createdBy      CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy      CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+model FuneralClaimBlock {
+  id                          Int                 @id @default(autoincrement())
+  claimId                     String?
+  claim                       Claim?              @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  deceasedMemberId            String?
+  deceasedIndividual          DeceasedIndividual?
+  firstName                   String?
+  lastName                    String?
+  said                        String?
+  deceasedIndividualCreatedAt DateTime?
+  claimCreatedDate            DateTime?
+  dateOfDeath                 DateTime?
+  funeralClaimType            FuneralClaimType?
+  cause                       String?
+  policeCaseNumber            String?
+  reportingPoliceStation      String?
+  referenceNumber             String?
+  incidentDescription         String?
+  doctorName                  String?
+  doctorContactNumber         String?
+  doctoreAddress              String?
+  createdAt                   DateTime?           @default(now())
+  updatedAt                   DateTime?           @updatedAt
+  createdById                 Int?
+  updatedById                 Int?
+  createdBy                   CredentialsUser?    @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy                   CredentialsUser?    @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+model Identification {
+  id             Int                 @id @default(autoincrement())
+  type           identificationType?
+  country        String?
+  number         String?
+  policyholderId String?
+  Policyholder   Policyholder?       @relation(fields: [policyholderId], references: [id])
+}
+
+model IQuoteMember {
+  id                    Int                    @id @default(autoincrement())
+  firstName             String?
+  lastName              String?
+  email                 String?
+  citizenshipId         String?
+  age                   Int
+  naturalDeathAmount    Float?
+  accidentalDeathAmount Float?
+  premiumAmount         Float?
+  relation              ExtendedFamilyMembers?
+}
+
+model IBeneficiary {
+  id             Int          @id @default(autoincrement())
+  firstName      String?
+  lastName       String?
+  email          String?
+  percentage     Int?
+  relation       String?
+  identification Json
+  gender         Gender?
+  dateOfBirth    DateTime?
+  phone          String?
+  applicationId  String?
+  trustNumber    String?
+  Application    Application? @relation(fields: [applicationId], references: [id])
+  policyId       String?
+  Policy         Policy?      @relation(fields: [policyId], references: [id])
+  createdAt      DateTime?    @default(now())
+  updatedAt      DateTime?    @updatedAt
+  Leads          Leads?       @relation(fields: [leadsId], references: [id])
+  leadsId        String?
+}
+
+model Quotation {
+  id               Int              @id @default(autoincrement())
+  options          CoverageOptions?
+  billingFrequency PremiumFrequency @default(MONTHLY)
+  policyData       Json?
+  isArchived       Boolean?         @default(false)
+  createdAt        DateTime?        @default(now())
+  updatedAt        DateTime?        @updatedAt
+  createdById      Int?
+  updatedById      Int?
+  createdBy        CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy        CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+model IMember {
+  id                         Int                         @id @default(autoincrement())
+  minAge                     Int
+  maxAge                     Int
+  isStudying                 Boolean                     @default(false)
+  isDisabled                 Boolean                     @default(false)
+  isStillBorn                Boolean                     @default(false)
+  coverageAmount             Float
+  premiumAmount              Float
+  premiumFrequency           PremiumFrequency            @default(MONTHLY)
+  childrenPremiumCalculators PremiumCalculator[]
+  extendedPremiumCalculator  ExtendedPremiumCalculator[]
+}
+
+model EventNotification {
+  id                        Int              @id @default(autoincrement())
+  eventName                 eventName
+  eventCategory             eventCategory
+  packageName               PackageName
+  emailNotification         Boolean?         @default(false)
+  emailTemplate             String?
+  emailProductSpecification Boolean?         @default(false)
+  smsNotification           Boolean?         @default(false)
+  smsTemplate               String?
+  smsProductSpecification   Boolean?         @default(false)
+  attachment                Boolean?         @default(false)
+  isArchived                Boolean          @default(false)
+  createdAt                 DateTime?        @default(now())
+  updatedAt                 DateTime?        @updatedAt
+  createdById               Int?
+  updatedById               Int?
+  createdBy                 CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy                 CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+
+  @@unique([eventName, eventCategory, packageName])
+}
+
+model AccessLevels {
+  id          Int              @id @default(autoincrement())
+  role        UserRole         @default(AGENT)
+  packageName PackageName      @default(EMPLOYEE_FUNERAL_INSURANCE)
+  features    Features         @default(Application)
+  canView     Boolean          @default(false)
+  canCreate   Boolean          @default(false)
+  canUpdate   Boolean          @default(false)
+  canDelete   Boolean          @default(false)
+  createdAt   DateTime?        @default(now())
+  updatedAt   DateTime?        @updatedAt
+  createdById Int?
+  updatedById Int?
+  createdBy   CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy   CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+
+  @@unique([role, features])
+}
+
+model ClaimCheckListDefinitions {
+  id          Int         @id @default(autoincrement())
+  packageName PackageName
+  condition   String
+}
+
+model ClaimCheckList {
+  id                 Int                  @id @default(autoincrement())
+  packageName        PackageName
+  claimId            String?
+  claim              Claim?               @relation(fields: [claimId], references: [id])
+  condition          String
+  checked            Boolean              @default(false)
+  ClaimcheckListNote ClaimcheckListNote[]
+  createdAt          DateTime?            @default(now())
+  updatedAt          DateTime?            @updatedAt
+  createdById        Int?
+  updatedById        Int?
+  createdBy          CredentialsUser?     @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy          CredentialsUser?     @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+model EmployeeData {
+  id            Int              @id @default(autoincrement())
+  CellPhone     String?
+  Email         String?
+  FullName      String?
+  IDNumber      String?
+  SalaryRef     String?
+  Initials      String?
+  Username      String?
+  PreferredName String?
+  Rank          String?
+  Status        String?
+  Surname       String?
+  Title         String?
+  createdAt     DateTime?        @default(now())
+  updatedAt     DateTime?        @updatedAt
+  createdById   Int?
+  updatedById   Int?
+  createdBy     CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy     CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+model Reports {
+  id          Int         @id @default(autoincrement())
+  packageName PackageName @default(EMPLOYEE_FUNERAL_INSURANCE)
+  reportType  ReportType
+  csvData     Json[]
+  isArchived  Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime?
+}
+
+model Package {
+  id           Int            @id @default(autoincrement())
+  packageName  PackageName
+  attachments  Attachments[]
+  packageRules PackageRules[]
+
+  @@unique([packageName])
+}
+
+model Attachments {
+  id          Int              @id @default(autoincrement())
+  fileUrl     String?
+  s3response  Json?
+  name        String?
+  type        String?
+  isArchived  Boolean?         @default(false)
+  package     Package?         @relation(fields: [packageId], references: [id])
+  packageId   Int?
+  createdById Int?
+  createdBy   CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  createdAt   DateTime?        @default(now())
+}
+
+model CreditLifeClaimBlock {
+  id      Int     @id @default(autoincrement())
+  claimId String?
+  claim   Claim?  @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  claimCreatedDate       DateTime?
+  dateOfDeath            DateTime?
+  placeOfDeath           String?
+  creditLifeClaimType    FuneralClaimType?
+  cause                  String?
+  policeCaseNumber       String?
+  reportingPoliceStation String?
+  referenceNumber        String?
+  incidentDescription    String?
+
+  createdAt   DateTime?        @default(now())
+  updatedAt   DateTime?        @updatedAt
+  createdById Int?
+  updatedById Int?
+  createdBy   CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy   CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+model VehicleData {
+  id                 Int              @id @default(autoincrement())
+  AreaOffice         String?
+  EngineNumber       String?
+  Make               String?
+  MarketValue        String?
+  MMNumber           String?
+  Model              String?
+  RecordId           String?
+  RegistrationNumber String?
+  RetailPrice        String?
+  TradePrice         String?
+  TransactionNumber  String?
+  VehicleRef         String?
+  VINNumber          String?
+  WRTYEnd            String?
+  WRTYStart          String?
+  YearModel          String?
+  VehicleNumber      String?
+  createdAt          DateTime?        @default(now())
+  updatedAt          DateTime?        @updatedAt
+  createdById        Int?
+  updatedById        Int?
+  createdBy          CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy          CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+model DevicePremiumCalculator {
+  id            Int              @id @default(autoincrement())
+  min           Int?
+  max           Int?
+  premiumAmount Float?
+  isArchived    Boolean?         @default(false)
+  createdAt     DateTime?        @default(now())
+  updatedAt     DateTime?        @updatedAt
+  updatedById   Int?
+  createdById   Int?
+  updatedBy     CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+  createdBy     CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+}
+
+model PackageRules {
+  id            Int              @id @default(autoincrement())
+  ruleLimits    RuleLimits[]
+  ruleStartDate DateTime?
+  packageId     Int?
+  Package       Package?         @relation(fields: [packageId], references: [id])
+  updatedById   Int?
+  createdById   Int?
+  updatedBy     CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+  createdBy     CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+}
+
+model RuleLimits {
+  id                       Int           @id @default(autoincrement())
+  freeCoverBenefitAmount   Float?
+  freeCoverPremium         Float?
+  aditionalCoverPercentage Float?
+  minValue                 Float?
+  maxValue                 Float?
+  packageRulesId           Int?
+  PackageRules             PackageRules? @relation(fields: [packageRulesId], references: [id])
+}
+
+model DeviceCatalog {
+  id          Int              @id @default(autoincrement())
+  deviceType  String
+  brand       String
+  modelName   String
+  colour      String
+  updatedById Int?
+  createdById Int?
+  updatedBy   CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+  createdBy   CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+}
+
+model DeviceClaimBlock {
+  id                     Int              @id @default(autoincrement())
+  Claim                  Claim?           @relation(fields: [claimId], references: [id])
+  claimId                String?
+  claimCreatedDate       DateTime?
+  incidentDate           DateTime?
+  claimType              DeviceClaimType?
+  cause                  String?
+  policeCaseNumber       String?
+  reportingPoliceStation String?
+  referenceNumber        String?
+  incidentDescription    String?
+  address                String?
+  suburb                 String?
+  province               String?
+  postalCode             String?
+  createdAt              DateTime?        @default(now())
+  updatedAt              DateTime?        @updatedAt
+  createdById            Int?
+  updatedById            Int?
+  createdBy              CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy              CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+model CreditLifeDeviceClaimBlock {
+  id                     Int               @id @default(autoincrement())
+  claimId                String?
+  claim                  Claim?            @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  claimCreatedDate       DateTime?
+  dateOfDeath            DateTime?
+  timeOfDeath            String?
+  placeOfDeath           String?
+  creditLifeClaimType    FuneralClaimType?
+  cause                  String?
+  policeCaseNumber       String?
+  reportingPoliceStation String?
+  referenceNumber        String?
+  incidentDescription    String?
+  suburb                 String?
+  province               String?
+  createdAt              DateTime?         @default(now())
+  updatedAt              DateTime?         @updatedAt
+  createdById            Int?
+  updatedById            Int?
+  createdBy              CredentialsUser?  @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy              CredentialsUser?  @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+model RetailDeviceClaimBlock {
+  id                     Int              @id @default(autoincrement())
+  Claim                  Claim?           @relation(fields: [claimId], references: [id])
+  claimId                String?
+  claimCreatedDate       DateTime?
+  incidentDate           DateTime?
+  claimType              DeviceClaimType?
+  cause                  String?
+  policeCaseNumber       String?
+  reportingPoliceStation String?
+  referenceNumber        String?
+  incidentDescription    String?
+  address                String?
+  suburb                 String?
+  province               String?
+  postalCode             String?
+  createdAt              DateTime?        @default(now())
+  updatedAt              DateTime?        @updatedAt
+  createdById            Int?
+  updatedById            Int?
+  createdBy              CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy              CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+model RetailCreditLifeDeviceClaimBlock {
+  id                     Int               @id @default(autoincrement())
+  claimId                String?
+  claim                  Claim?            @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  claimCreatedDate       DateTime?
+  dateOfDeath            DateTime?
+  timeOfDeath            String?
+  placeOfDeath           String?
+  creditLifeClaimType    FuneralClaimType?
+  cause                  String?
+  policeCaseNumber       String?
+  reportingPoliceStation String?
+  referenceNumber        String?
+  incidentDescription    String?
+  suburb                 String?
+  province               String?
+  createdAt              DateTime?         @default(now())
+  updatedAt              DateTime?         @updatedAt
+  createdById            Int?
+  updatedById            Int?
+  createdBy              CredentialsUser?  @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy              CredentialsUser?  @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+model ActionRequiredPolices {
+  id           Int        @id @default(autoincrement())
+  policyNumber String
+  actionType   ActionType @default(CHILD_AGE_LIMIT_EXCEDED)
+  isArchived   Boolean    @default(false)
+  actionDate   DateTime?
+  childId      String?
+  createdAt    DateTime?  @default(now())
+  updatedAt    DateTime?  @updatedAt
+}
+
+model SmsVerfication {
+  id          Int              @id @default(autoincrement())
+  email       String
+  otp         String
+  createdAt   DateTime?        @default(now())
+  createdById Int?
+  createdBy   CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+}
+
+model Contacts {
+  id             Int              @id @default(autoincrement())
+  phone          String?
+  planType       String?
+  productCode    String?
+  order          String?
+  model          String?
+  typeOfDevice   String?
+  imei           String?
+  masterDealer   String?
+  dealerRegion   String?
+  distribution   String?
+  dateOfPurchase String?
+  firstName      String?
+  lastName       String?
+  banNumber      String?
+  isArchived     Boolean?         @default(false)
+  status         ContactStatus    @default(OPEN)
+  callCenter     CallCenter?      @relation(fields: [callCenterId], references: [id])
+  leads          Leads?           @relation(fields: [leadsId], references: [id])
+  callCenterId   Int?
+  leadsId        String?
+  assignedAt     DateTime?        @default(now())
+  createdById    Int?
+  updatedById    Int?
+  createdBy      CredentialsUser? @relation("createdBy", fields: [createdById], references: [id])
+  updatedBy      CredentialsUser? @relation("updatedBy", fields: [updatedById], references: [id])
+}
+
+enum ContactStatus {
+  OPEN
+  INTERESTED
+  NOT_INTERESTED
+  CALL_SCHEDULED
+  EXPIRED
+}
